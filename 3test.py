@@ -82,7 +82,7 @@ async def collect_missing_data(update: Update, context: ContextTypes.DEFAULT_TYP
 
         if len(user_message) != 9:
             await update.message.reply_text(
-                "Ошибка: необходимо ввести 10 значений, каждое с новой строки.\nПопробуйте снова."
+                "Ошибка: необходимо ввести 9 значений, каждое с новой строки.\nПопробуйте снова."
             )
             return
 
