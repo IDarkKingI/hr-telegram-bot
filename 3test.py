@@ -6,7 +6,6 @@ import os
 
 TOKEN = '8159286438:AAEhG_NgnX_NHHcRw4t9T6251-cHFyW_quo'
 
-
 # Функция для старта
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     keyboard = [
@@ -19,14 +18,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         reply_markup=reply_markup,
     )
 
-
 # Обработчик для выбора "самозанятый"
 async def handle_self_employed(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         "Вы выбрали Самозанятый. Пожалуйста, отправьте файл 'карточку' в формате .docx."
     )
     context.user_data["mode"] = "self_employed"  # Устанавливаем режим для дальнейшей логики
-
 
 # Обработчик файла
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -44,7 +41,12 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
     file_id = file.file_id
     tg_file = await context.bot.get_file(file_id)
-    file_path = f"{file.file_id}.docx"
+    file_name = file.file_name  # Получаем оригинальное название файла
+    file_path = os.path.join("/home/darkking/hr-telegram-bot/", file_name)  # Указываем путь сохранения файла с оригинальным названием
+
+    # Сохраняем file_name и file_path в context.user_data
+    context.user_data["file_name"] = file_name
+    context.user_data["file_path"] = file_path
 
     # Скачать файл
     await tg_file.download_to_drive(file_path)
@@ -70,10 +72,6 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         context.user_data["waiting_for_input"] = True
     except Exception as e:
         await update.message.reply_text(f"Произошла ошибка: {e}")
-    finally:
-        if os.path.exists(file_path):
-            os.remove(file_path)
-
 
 # Обработчик ввода недостающих данных
 async def collect_missing_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -106,7 +104,6 @@ async def collect_missing_data(update: Update, context: ContextTypes.DEFAULT_TYP
     else:
         await update.message.reply_text("Я вас не понял. Пожалуйста, сначала отправьте файл.")
 
-
 # Функция для обработки и отправки файлов
 async def process_and_send_files(update, context):
     card_data = context.user_data["card_data"]
@@ -134,10 +131,12 @@ async def process_and_send_files(update, context):
         "ОПЛАТА УСЛУГ": additional_data["ОПЛАТА УСЛУГ"],
     }
 
+    file_name = context.user_data["file_name"]
+
     input_file1 = "/home/darkking/hr-telegram-bot/Акт_СЗ.docx"
-    output_file1 = "/home/darkking/hr-telegram-bot/Акт_СЗ_готовый.docx"
+    output_file1 = os.path.join("/home/darkking/hr-telegram-bot/", f"Акт_{file_name}.docx")
     input_file2 = "/home/darkking/hr-telegram-bot/Договор_СЗ.docx"
-    output_file2 = "/home/darkking/hr-telegram-bot/Договор_СЗ_готовый.docx"
+    output_file2 = os.path.join("/home/darkking/hr-telegram-bot/", f"Договор_{file_name}.docx")
 
     replace_highlighted_text(input_file1, output_file1, replacement_dict)
     replace_highlighted_text(input_file2, output_file2, replacement_dict)
@@ -148,7 +147,6 @@ async def process_and_send_files(update, context):
     # Вернуться в главное меню
     await update.message.reply_text("Файлы успешно обработаны и отправлены!\nВозвращаюсь в главное меню.")
     await start(update, context)
-
 
 # Считывание данных из файла .docx
 def extract_data_from_docx(file_path):
@@ -161,7 +159,6 @@ def extract_data_from_docx(file_path):
             if key and value:
                 data[key] = value
     return data
-
 
 # Замена текста в документе
 def replace_highlighted_text(input_path, output_path, replacements, highlight_color=7):
@@ -185,7 +182,6 @@ def replace_highlighted_text(input_path, output_path, replacements, highlight_co
                                     run.font.highlight_color = None
     doc.save(output_path)
 
-
 # Запуск бота
 def main():
     app = Application.builder().token(TOKEN).build()
@@ -197,7 +193,6 @@ def main():
 
     print("Бот запущен!")
     app.run_polling()
-
 
 if __name__ == "__main__":
     main()
