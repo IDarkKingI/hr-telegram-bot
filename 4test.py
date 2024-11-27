@@ -14,16 +14,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
     await update.message.reply_text(
-        "Привет! Пожалуйста, выберите, с кем мы работаем: ИП или самозанятый.",
+        "Привет! Пожалуйста, выберите, с кем мы работаем: ИП или Самозанятый.",
         reply_markup=reply_markup,
     )
 
+# Обработчик для выбора "Самозанятый"
 async def handle_self_employed(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         "Вы выбрали Самозанятый. Пожалуйста, отправьте файл 'карточку' в формате .docx."
     )
-    context.user_data["mode"] = "self_employed"  # Устанавливаем режим для дальнейшей логики
+    context.user_data["mode"] = "self_employed"
 
+# Обработчик для выбора "ИП"
 async def handle_individual_entrepreneur(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         "Вы выбрали ИП. Пожалуйста, отправьте файл 'карточку' в формате .docx."
@@ -87,7 +89,6 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     except Exception as e:
         await update.message.reply_text(f"Произошла ошибка: {e}")
 
-
 # Обработчик ввода недостающих данных
 async def collect_missing_data(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if context.user_data.get("waiting_for_input"):
@@ -135,32 +136,7 @@ async def process_and_send_files(update, context):
     card_data = context.user_data["card_data"]
     additional_data = context.user_data["additional_data"]
 
-    replacement_dict = {
-        "ФИОп": card_data.get("ФИО(полностью)", ""),
-        "ФИО": card_data.get("ФИО(сокращенно)", ""),
-        "ПАСПОРТ:": card_data.get("Паспорт(серия номер)", ""),
-        "ДАТА РОЖДЕНИЯ:": card_data.get("Дата рождения", ""),
-        "АДРЕС:": card_data.get("Адрес регистрации", ""),
-        "ИНН:": card_data.get("ИНН", ""),
-        "НАИМЕНОВАНИЕ БАНКА:": card_data.get("Наименование банка", ""),
-        "НОМЕР СЧЕТА:": card_data.get("Номер счета", ""),
-        "БИК": card_data.get("БИК", ""),
-        "ОГРНИП": card_data.get("ОГРНИП", ""),
-        "КОД ПОДРАЗДЕЛЕНИЯ:": card_data.get("Код подразделения", ""),
-        "К/С": card_data.get("К/С", ""),
-        "Р/С": card_data.get("Р/С", ""),
-        "к/с": additional_data["к/с"],
-        "НОМЕР И ДАТА ДОГОВОРА": additional_data["НОМЕР И ДАТА ДОГОВОРА"],
-        "ДАТА ПОСТАНОВКИ НА УЧЕТ": additional_data["ДАТА ПОСТАНОВКИ НА УЧЕТ"],
-        "СПРАВКА О ПОСТАНОВКЕ": additional_data["СПРАВКА О ПОСТАНОВКЕ"],
-        "УСЛУГА ИСПОЛНИТЕЛЯ": additional_data["УСЛУГА ИСПОЛНИТЕЛЯ"],
-        "СТОИМОСТЬ": additional_data["СТОИМОСТЬ"],
-        "АКТУАЛЬНАЯ ДАТА": additional_data["АКТУАЛЬНАЯ ДАТА"],
-        "СРОКИ ОКАЗАНИЯ": additional_data["СРОКИ ОКАЗАНИЯ"],
-        "ОПЛАТА УСЛУГ": additional_data["ОПЛАТА УСЛУГ"],
-        "ФОРМАТ РЕЗУЛЬТАТА": additional_data["ФОРМАТ РЕЗУЛЬТАТА"]
-    }
-
+    replacement_dict = {**card_data, **additional_data}
     file_name = context.user_data["file_name"]
 
     input_file1 = "/home/darkking/hr-telegram-bot/Акт_ИП.docx" if context.user_data["mode"] == "individual_entrepreneur" else "/home/darkking/hr-telegram-bot/Акт_СЗ.docx"
@@ -168,14 +144,12 @@ async def process_and_send_files(update, context):
     input_file2 = "/home/darkking/hr-telegram-bot/Договор_ИП.docx" if context.user_data["mode"] == "individual_entrepreneur" else "/home/darkking/hr-telegram-bot/Договор_СЗ.docx"
     output_file2 = os.path.join("/home/darkking/hr-telegram-bot/", f"Договор_{file_name}.docx")
 
-
     replace_highlighted_text(input_file1, output_file1, replacement_dict)
     replace_highlighted_text(input_file2, output_file2, replacement_dict)
 
     await context.bot.send_document(chat_id=update.effective_chat.id, document=open(output_file1, "rb"))
     await context.bot.send_document(chat_id=update.effective_chat.id, document=open(output_file2, "rb"))
 
-    # Вернуться в главное меню
     await update.message.reply_text("Файлы успешно обработаны и отправлены!\nВозвращаюсь в главное меню.")
     await start(update, context)
 
@@ -218,10 +192,6 @@ def main():
     app = Application.builder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.Regex("^Самозанятый$"), handle_self_employed))
-    app.add_handler(MessageHandler(filters.Regex("^ИП$"), handle_individual_entrepreneur))
-    app.add_handler(MessageHandler(filters.Document.ALL, handle_file))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, collect_missing_data))
 
     print("Бот запущен!")
     app.run_polling()
