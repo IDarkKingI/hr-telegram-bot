@@ -77,7 +77,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     file_id = file.file_id
     tg_file = await context.bot.get_file(file_id)
     file_name = file.file_name
-    file_path = os.path.join("/mnt/hr-telegram-bot/cards", file_name)
+    file_path = os.path.join("/home/darkking/hr-telegram-bot/cards", file_name)
 
     context.user_data["file_name"] = file_name
     context.user_data["file_path"] = file_path
@@ -203,10 +203,10 @@ async def process_and_send_files(update, context):
 
     file_name = context.user_data["file_name"]
 
-    input_file1 = "/mnt/hr-telegram-bot/Акт_ИП.docx" if context.user_data["mode"] == "individual_entrepreneur" else "/mnt/hr-telegram-bot/Акт_СЗ.docx"
-    output_file1 = os.path.join("/mnt/hr-telegram-bot/result", f"Акт_{file_name}")
-    input_file2 = "/mnt/hr-telegram-bot/Договор_ИП.docx" if context.user_data["mode"] == "individual_entrepreneur" else "/mnt/hr-telegram-bot/Договор_СЗ.docx"
-    output_file2 = os.path.join("/mnt/hr-telegram-bot/result/", f"Договор_{file_name}")
+    input_file1 = "/home/darkking/hr-telegram-bot/Акт_ИП.docx" if context.user_data["mode"] == "individual_entrepreneur" else "/home/darkking/hr-telegram-bot/Акт_СЗ.docx"
+    output_file1 = os.path.join("/home/darkking/hr-telegram-bot/result", f"Акт_{file_name}")
+    input_file2 = "/home/darkking/hr-telegram-bot/Договор_ИП.docx" if context.user_data["mode"] == "individual_entrepreneur" else "/home/darkking/hr-telegram-bot/Договор_СЗ.docx"
+    output_file2 = os.path.join("/home/darkking/hr-telegram-bot/result/", f"Договор_{file_name}")
 
     replace_highlighted_text(input_file1, output_file1, replacement_dict)
     replace_highlighted_text(input_file2, output_file2, replacement_dict)
